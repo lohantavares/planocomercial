@@ -478,14 +478,15 @@ function render(){
       </div>`;
   }
 
-  // table
+  // table — assessor view uses nv=1 (individual); gerente/sócios use full team
+  const tNv = view==='assessor' ? 1 : nv;
   const tbody = document.getElementById('tbody');
   let rows = '';
   for(let m=0;m<=30;m++){
     const at = ASSESSOR[m];
-    const gt = gerenteTotal(m, nv);
-    const r = m*LIQ*nv;
-    const pago = at*nv + gt;
+    const gt = gerenteTotal(m, tNv);
+    const r = m*LIQ*tNv;
+    const pago = at*tNv + gt;
     const sal = r - pago;
     const cls = (m===mat?'active ':'') + (m>=10&&m<=14?'meta-row':'');
     rows += `<tr class="${cls.trim()}">
@@ -499,10 +500,11 @@ function render(){
   }
   tbody.innerHTML = rows;
 
-  document.getElementById('table-note').innerHTML =
-    `Receita líquida = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>${nv} ${nv===1?'assessor':'assessores'}</strong>.`;
+  document.getElementById('table-note').innerHTML = view==='assessor'
+    ? `Receita líquida = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Valores para <strong>1 assessor</strong>.`
+    : `Receita líquida = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>${nv} ${nv===1?'assessor':'assessores'}</strong>.`;
 
-  updateChart(mat);
+  updateChart(mat, tNv);
 }
 
 function chartSeries(nv){
@@ -517,7 +519,8 @@ function chartSeries(nv){
 
 function buildChart(){
   const ctx = document.getElementById('chart').getContext('2d');
-  const s = chartSeries(+document.getElementById('nv').value);
+  const tNv = view==='assessor' ? 1 : +document.getElementById('nv').value;
+  const s = chartSeries(tNv);
   chart = new Chart(ctx,{
     type:'line',
     data:{labels:s.labels,datasets:[
@@ -541,9 +544,9 @@ function buildChart(){
   });
 }
 
-function updateChart(mat){
+function updateChart(mat, tNv){
   if(!chart) return;
-  const s = chartSeries(+document.getElementById('nv').value);
+  const s = chartSeries(tNv);
   chart.data.datasets[0].data = s.assessor;
   chart.data.datasets[1].data = s.gerente;
   chart.data.datasets[2].data = s.saldo;
