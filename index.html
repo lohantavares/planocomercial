@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Plano de Comissionamento — Comercial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --card:#FFFFFF;
+    --ink:#15241E;
+    --muted:#5F6E66;
+    --faint:#8A968F;
+    --emerald:#0E5A47;
+    --emerald-2:#0A4537;
+    --emerald-wash:#E7EFE9;
+    --gold:#B67E22;
+    --gold-wash:#F6ECD8;
+    --loss:#A23A24;
+    --loss-wash:#F6E4DD;
+    --line:rgba(21,36,30,0.10);
+    --line-2:rgba(21,36,30,0.16);
+    --shadow:0 1px 2px rgba(21,36,30,0.04), 0 8px 30px rgba(21,36,30,0.05);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:16px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    font-variant-numeric:tabular-nums;
+  }
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+
+  /* Header */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(246,243,236,0.85);
+    backdrop-filter:blur(12px);
+    border-bottom:0.5px solid var(--line);
+  }
+  .head-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;font-size:15px;letter-spacing:-0.01em;}
+  .brand .mark{
+    width:30px;height:30px;border-radius:8px;background:var(--emerald);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:17px;font-weight:600;
+  }
+  .seg{display:inline-flex;background:var(--card);border:0.5px solid var(--line-2);border-radius:999px;padding:3px;box-shadow:var(--shadow);}
+  .seg button{
+    border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:13.5px;font-weight:500;
+    color:var(--muted);padding:7px 16px;border-radius:999px;transition:all .2s ease;white-space:nowrap;
+  }
+  .seg button.on{background:var(--emerald);color:#fff;}
+
+  /* Hero */
+  .hero{padding:56px 0 16px;}
+  .eyebrow{
+    font-size:12.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1.5px;background:var(--gold);display:inline-block;}
+  h1{
+    font-family:'Fraunces',serif;font-weight:500;font-size:clamp(34px,5vw,52px);
+    line-height:1.04;letter-spacing:-0.02em;max-width:16ch;
+  }
+  h1 em{font-style:italic;color:var(--emerald);}
+  .lede{margin-top:20px;font-size:18px;color:var(--muted);max-width:54ch;line-height:1.55;}
+
+  /* Calculator layout */
+  .calc{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:40px;align-items:start;}
+  @media(max-width:860px){.calc{grid-template-columns:1fr;}}
+
+  .panel{background:var(--card);border:0.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow);}
+  .controls{padding:26px 26px 30px;}
+  .controls h3{font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--faint);margin-bottom:22px;}
+
+  .field{margin-bottom:26px;}
+  .field:last-child{margin-bottom:0;}
+  .field-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  .field-label{font-size:15px;font-weight:500;color:var(--ink);}
+  .field-val{font-family:'Fraunces',serif;font-size:30px;font-weight:600;color:var(--emerald);line-height:1;}
+  .field-val small{font-family:'Inter';font-size:14px;font-weight:500;color:var(--muted);margin-left:5px;}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;
+    background:var(--emerald-wash);outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;
+    background:var(--emerald);border:4px solid #fff;box-shadow:0 1px 5px rgba(14,90,71,0.4);cursor:pointer;transition:transform .12s ease;
+  }
+  input[type=range]::-webkit-slider-thumb:active{transform:scale(1.12);}
+  input[type=range]::-moz-range-thumb{
+    width:24px;height:24px;border-radius:50%;background:var(--emerald);border:4px solid #fff;
+    box-shadow:0 1px 5px rgba(14,90,71,0.4);cursor:pointer;
+  }
+  .scale{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:9px;}
+  .scale .meta-tick{color:var(--gold);font-weight:600;}
+
+  /* Result panel (payslip / P&L) */
+  .result{padding:0;overflow:hidden;display:flex;flex-direction:column;}
+  .result-head{
+    padding:22px 26px;border-bottom:0.5px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .result-head .tag{font-size:13px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--faint);}
+  .badge{font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;letter-spacing:0.01em;}
+  .b-loss{background:var(--loss-wash);color:var(--loss);}
+  .b-base{background:var(--gold-wash);color:var(--gold);}
+  .b-mid{background:#FBF1D9;color:var(--gold);}
+  .b-meta{background:var(--emerald-wash);color:var(--emerald);}
+  .b-top{background:#DCEAE0;color:var(--emerald-2);}
+
+  .result-body{padding:30px 26px;flex:1;}
+  .big-label{font-size:14.5px;color:var(--muted);margin-bottom:8px;}
+  .big-num{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(44px,7vw,60px);line-height:1;letter-spacing:-0.02em;}
+  .big-num.pos{color:var(--emerald);}
+  .big-num.neg{color:var(--loss);}
+  .big-sub{font-size:14px;color:var(--faint);margin-top:12px;}
+
+  .lines{margin-top:28px;border-top:0.5px solid var(--line);padding-top:8px;}
+  .pline{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:0.5px solid var(--line);font-size:15px;}
+  .pline:last-child{border-bottom:none;}
+  .pline .k{color:var(--muted);display:flex;align-items:center;gap:9px;}
+  .pline .k .dot{width:8px;height:8px;border-radius:2px;}
+  .pline .v{font-weight:500;font-variant-numeric:tabular-nums;}
+  .pline.total{margin-top:4px;padding-top:15px;border-top:1.5px solid var(--line-2);border-bottom:none;font-size:16px;}
+  .pline.total .k{color:var(--ink);font-weight:600;}
+  .pline.total .v{font-family:'Fraunces',serif;font-size:21px;font-weight:600;}
+
+  /* Sections */
+  section.block{padding:60px 0;border-top:0.5px solid var(--line);margin-top:48px;}
+  .sec-eyebrow{font-size:12.5px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;}
+  h2{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(26px,3.5vw,36px);letter-spacing:-0.02em;line-height:1.1;}
+  .sec-lede{margin-top:14px;font-size:17px;color:var(--muted);max-width:60ch;}
+
+  /* Rules cards */
+  .rules{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:36px;}
+  @media(max-width:820px){.rules{grid-template-columns:1fr;}}
+  .rule-card{background:var(--card);border:0.5px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);}
+  .rule-card .role{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .rule-card .role .ic{
+    width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:#fff;
+  }
+  .rule-card .role .ic.a{background:var(--emerald);}
+  .rule-card .role .ic.g{background:var(--gold);}
+  .rule-card .role h3{font-size:19px;font-weight:600;letter-spacing:-0.01em;}
+  .rule-card .role p{font-size:13.5px;color:var(--faint);}
+  .tiers{margin-top:20px;}
+  .tier{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:0.5px solid var(--line);}
+  .tier:last-child{border-bottom:none;}
+  .tier .range{font-weight:500;font-size:15px;}
+  .tier .range span{display:block;font-size:12.5px;color:var(--faint);font-weight:400;margin-top:1px;}
+  .tier .pay{font-family:'Fraunces',serif;font-weight:600;font-size:17px;text-align:right;}
+  .tier .pay span{display:block;font-family:'Inter';font-size:12px;color:var(--faint);font-weight:400;}
+
+  /* Table */
+  .table-card{background:var(--card);border:0.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden;margin-top:34px;}
+  .table-scroll{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px;}
+  thead th{
+    background:#FBFAF6;font-size:11.5px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;
+    color:var(--faint);padding:14px 16px;text-align:right;border-bottom:0.5px solid var(--line-2);position:sticky;top:0;
+  }
+  thead th:first-child{text-align:left;}
+  tbody td{padding:12px 16px;text-align:right;border-bottom:0.5px solid var(--line);font-variant-numeric:tabular-nums;}
+  tbody td:first-child{text-align:left;font-weight:600;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.active{background:var(--emerald-wash);}
+  tbody tr.active td{color:var(--emerald-2);font-weight:600;}
+  tbody tr.meta-row td:first-child::after{content:"meta";font-size:10px;font-weight:600;color:var(--gold);background:var(--gold-wash);padding:2px 7px;border-radius:999px;margin-left:8px;letter-spacing:0.03em;}
+  .saldo-pos{color:var(--emerald);font-weight:600;}
+  .saldo-neg{color:var(--loss);font-weight:600;}
+  .table-note{padding:14px 18px;font-size:13px;color:var(--faint);background:#FBFAF6;border-top:0.5px solid var(--line);}
+
+  /* Chart */
+  .chart-card{background:var(--card);border:0.5px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:28px;margin-top:34px;}
+  .chart-legend{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:18px;}
+  .leg{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);}
+  .leg .sw{width:14px;height:3px;border-radius:2px;}
+  .chart-box{position:relative;height:300px;}
+
+  /* Insights */
+  .insights{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px;}
+  @media(max-width:820px){.insights{grid-template-columns:1fr;}}
+  .ins{background:var(--card);border:0.5px solid var(--line);border-radius:16px;padding:24px;box-shadow:var(--shadow);}
+  .ins .n{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--gold);margin-bottom:10px;}
+  .ins h4{font-size:16px;font-weight:600;margin-bottom:7px;letter-spacing:-0.01em;}
+  .ins p{font-size:14px;color:var(--muted);line-height:1.55;}
+
+  footer{padding:48px 0 64px;border-top:0.5px solid var(--line);margin-top:56px;color:var(--faint);font-size:13px;text-align:center;}
+  footer .pill{display:inline-block;font-style:italic;font-family:'Fraunces',serif;color:var(--muted);}
+
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}*{transition:none!important;}}
+  @media print{
+    header{position:static;}input[type=range]{display:none;}
+    .panel,.rule-card,.table-card,.chart-card,.ins{box-shadow:none;break-inside:avoid;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap head-inner">
+    <div class="brand"><span class="mark">E</span> Plano Comercial · 2026</div>
+    <div class="seg" role="tablist" aria-label="Trocar visão">
+      <button id="tab-assessor" class="on" role="tab" aria-selected="true">Assessor</button>
+      <button id="tab-gerente" role="tab" aria-selected="false">Gerente</button>
+      <button id="tab-socios" role="tab" aria-selected="false">Sócios</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow" id="hero-eyebrow">Remuneração por desempenho</div>
+    <h1 id="hero-title">Quanto você leva <em>pra casa</em> no fim do mês.</h1>
+    <p class="lede" id="hero-lede">Sua renda tem uma base garantida e cresce a cada matrícula. Mexa nos controles e veja exatamente o resultado.</p>
+
+    <div class="calc">
+      <div class="panel controls">
+        <h3>Simule o seu mês</h3>
+        <div class="field">
+          <div class="field-top">
+            <span class="field-label" id="mat-label">Matrículas no mês</span>
+            <span class="field-val num" id="mat-out">10</span>
+          </div>
+          <input type="range" id="mat" min="0" max="30" value="10" step="1" aria-label="Matrículas por assessor no mês">
+          <div class="scale"><span>0</span><span class="meta-tick">meta · 10</span><span>30</span></div>
+        </div>
+        <div class="field" id="nv-field">
+          <div class="field-top">
+            <span class="field-label">Assessores na equipe</span>
+            <span class="field-val num" id="nv-out">3</span>
+          </div>
+          <input type="range" id="nv" min="0" max="10" value="3" step="1" aria-label="Número de assessores na equipe">
+          <div class="scale"><span>0</span><span>10</span></div>
+        </div>
+        <div class="field" id="gm-field">
+          <div class="field-top">
+            <span class="field-label">Individuais (gerente)</span>
+            <span class="field-val num" id="gm-out">0</span>
+          </div>
+          <input type="range" id="gm" min="0" max="30" value="0" step="1" aria-label="Matrículas individuais do gerente">
+          <div class="scale"><span>0</span><span>R$ 456 cada</span><span>30</span></div>
+        </div>
+        <div id="total-mat-box" style="margin-top:22px;padding-top:18px;border-top:0.5px solid var(--line);align-items:baseline;justify-content:space-between;">
+          <span style="font-size:14px;color:var(--muted);">Total de matrículas no mês<br><span style="font-size:12px;color:var(--faint);">assessores + gerente</span></span>
+          <span class="field-val num" id="total-mat-out" style="font-size:34px;">0</span>
+        </div>
+      </div>
+
+      <div class="panel result">
+        <div class="result-head">
+          <span class="tag" id="res-tag">Holerite do assessor</span>
+          <span class="badge b-meta" id="res-badge">Meta atingida</span>
+        </div>
+        <div class="result-body" id="res-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="sec-eyebrow">As regras</div>
+    <h2>Como cada real é calculado</h2>
+    <p class="sec-lede">Duas funções, dois jeitos de ganhar. O assessor escala a própria renda com base fixa mais bônus por volume; o gerente recebe um valor único por matrícula de toda a equipe — simples e previsível.</p>
+
+    <div class="rules">
+      <div class="rule-card">
+        <div class="role">
+          <span class="ic a">A</span>
+          <div><h3>Assessor</h3><p>Base fixa garantida + bônus por volume</p></div>
+        </div>
+        <div class="tiers">
+          <div class="tier"><div class="range">0 a 5 matrículas<span>só a base garantida</span></div><div class="pay num">R$ 1.500<span>fixo</span></div></div>
+          <div class="tier"><div class="range">6 a 9 matrículas<span>bônus começa a contar</span></div><div class="pay num">até R$ 2.400</div></div>
+          <div class="tier"><div class="range">10 a 14 matrículas<span>faixa da meta</span></div><div class="pay num">até R$ 3.600</div></div>
+          <div class="tier"><div class="range">15 a 19 matrículas<span>alta performance</span></div><div class="pay num">até R$ 4.920</div></div>
+          <div class="tier"><div class="range">20 a 30 matrículas<span>teto do plano</span></div><div class="pay num">até R$ 6.900</div></div>
+        </div>
+      </div>
+
+      <div class="rule-card">
+        <div class="role">
+          <span class="ic g">G</span>
+          <div><h3>Gerente</h3><p>Ganha pela equipe e pelas próprias vendas</p></div>
+        </div>
+        <div class="tiers">
+          <div class="tier"><div class="range">Cada matrícula da equipe<span>somando todos os assessores</span></div><div class="pay num">R$ 150<span>por matrícula</span></div></div>
+          <div class="tier"><div class="range">Cada matrícula própria<span>vendas que o gerente faz</span></div><div class="pay num">R$ 456<span>por matrícula</span></div></div>
+        </div>
+        <p style="margin-top:18px;font-size:13.5px;color:var(--muted);line-height:1.55;border-top:0.5px solid var(--line);padding-top:16px;">
+          O gerente recebe R$ 150 por matrícula de toda a equipe e ainda R$ 456 por cada matrícula que fechar pessoalmente. Assim ele é recompensado tanto por liderar quanto por continuar vendendo.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="sec-eyebrow">Mês a mês</div>
+    <h2>A tabela completa</h2>
+    <p class="sec-lede" id="table-lede">Todos os cenários de 0 a 30 matrículas. Os valores de receita e saldo consideram a equipe inteira; a linha em destaque acompanha o que você simulou acima.</p>
+
+    <div class="table-card">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Matr.</th>
+              <th>Receita líquida</th>
+              <th>Assessor</th>
+              <th>Gerente</th>
+              <th>Total pago</th>
+              <th>Saldo escola</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="table-note" id="table-note">Receita líquida = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>3 assessores</strong>.</div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-legend">
+        <span class="leg"><span class="sw" style="background:#0E5A47"></span>Pago aos assessores (equipe)</span>
+        <span class="leg"><span class="sw" style="background:#B67E22"></span>Pago ao gerente (equipe)</span>
+        <span class="leg"><span class="sw" style="background:#A23A24"></span>Saldo da escola (equipe)</span>
+      </div>
+      <div class="chart-box"><canvas id="chart"></canvas></div>
+    </div>
+  </section>
+
+  <section class="block" style="padding-bottom:0;">
+    <div class="sec-eyebrow">Por que funciona</div>
+    <h2>Um modelo simples e escalável</h2>
+    <div class="insights">
+      <div class="ins">
+        <div class="n">01</div>
+        <h4>Incentivo alinhado</h4>
+        <p>O assessor quer vender mais; o gerente quer a equipe inteira produzindo. Ninguém ganha tirando do outro — os dois crescem na mesma direção.</p>
+      </div>
+      <div class="ins">
+        <div class="n">02</div>
+        <h4>Escalada sem travas</h4>
+        <p>O ganho nunca cai conforme a produção sobe. Cada faixa nova vale mais por matrícula, então bater metas maiores compensa de verdade.</p>
+      </div>
+      <div class="ins">
+        <div class="n">03</div>
+        <h4>Sustentável para a escola</h4>
+        <p>A matrícula custeia o comercial e a mensalidade sustenta a operação. O custo cresce junto com a receita — a escola fica positiva na maioria dos cenários.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="pill">Plano de comissionamento comercial — documento de trabalho</p>
+    <p style="margin-top:8px;">Confidencial · preparado para avaliação dos sócios</p>
+  </footer>
+
+</main>
+
+<script>
+const LIQ = 456;
+const ASSESSOR = [
+  1500,1500,1500,1500,1500,1500,
+  2100,2200,2300,2400,
+  3000,3150,3300,3450,3600,
+  4200,4380,4560,4740,4920,
+  5100,5280,5460,5640,5820,6000,6180,6360,6540,6720,6900
+];
+const A_FIX = 1500;
+
+const G_RATE = 150;
+function gerenteTotal(matPerAssessor, nv){ return matPerAssessor*nv*G_RATE; }
+
+function brl(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
+function brlSigned(v){ const s = v<0?'− ':'+ '; return s + 'R$ ' + Math.abs(Math.round(v)).toLocaleString('pt-BR'); }
+
+function faixa(m){
+  if(m<=5) return {txt:'Base garantida', cls:'b-base'};
+  if(m<=9) return {txt:'Bônus parcial', cls:'b-mid'};
+  if(m<=14) return {txt:'Meta atingida', cls:'b-meta'};
+  if(m<=19) return {txt:'Alta performance', cls:'b-top'};
+  return {txt:'Teto do plano', cls:'b-top'};
+}
+
+let view = 'assessor';
+let chart;
+
+function render(){
+  const mat = +document.getElementById('mat').value;
+  const nv = +document.getElementById('nv').value;
+  const gm = +document.getElementById('gm').value;
+
+  document.getElementById('mat-out').textContent = mat;
+  document.getElementById('nv-out').textContent = nv;
+  document.getElementById('gm-out').textContent = gm;
+  document.getElementById('total-mat-out').textContent = (mat*nv) + gm;
+
+  const aTotal = ASSESSOR[mat];
+  const aBonus = aTotal - A_FIX;
+  const totalMat = mat * nv;
+  const gOverride = gerenteTotal(mat, nv);       // R$150 por matrícula da equipe
+  const gOwn = gm * LIQ;                          // R$456 por matrícula própria
+  const gTotal = gOverride + gOwn;               // ganho total do gerente
+  const recEq = mat * LIQ * nv;
+  const pagoEq = aTotal*nv + gOverride;          // saldo da escola não inclui o repasse das matrículas próprias (pass-through)
+  const saldoEq = recEq - pagoEq;
+  const f = faixa(mat);
+
+  const badge = document.getElementById('res-badge');
+
+  if(view === 'assessor'){
+    badge.className = 'badge ' + f.cls;
+    badge.textContent = f.txt;
+    document.getElementById('res-tag').textContent = 'Holerite do assessor';
+    document.getElementById('res-body').innerHTML = `
+      <div class="big-label">Seu ganho no mês</div>
+      <div class="big-num pos num">${brl(aTotal)}</div>
+      <div class="big-sub">com ${mat} ${mat===1?'matrícula':'matrículas'} no mês</div>
+      <div class="lines">
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(A_FIX)}</span></div>
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Bônus por matrículas</span><span class="v num">${brl(aBonus)}</span></div>
+        <div class="pline total"><span class="k">Total a receber</span><span class="v num">${brl(aTotal)}</span></div>
+      </div>`;
+  } else if(view === 'gerente'){
+    badge.className = 'badge b-meta';
+    badge.textContent = nv + (nv===1?' assessor':' assessores');
+    document.getElementById('res-tag').textContent = 'Ganho do gerente';
+    const ownLine = gm>0
+      ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Suas matrículas (${gm} × R$ 456)</span><span class="v num">${brl(gOwn)}</span></div>`
+      : '';
+    document.getElementById('res-body').innerHTML = `
+      <div class="big-label">Seu ganho no mês como gerente</div>
+      <div class="big-num pos num">${brl(gTotal)}</div>
+      <div class="big-sub">equipe de ${totalMat} ${totalMat===1?'matrícula':'matrículas'} × R$ 150${gm>0?` + ${gm} ${gm===1?'matrícula própria':'matrículas próprias'} × R$ 456`:''}</div>
+      <div class="lines">
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Override da equipe (${totalMat} × R$ 150)</span><span class="v num">${brl(gOverride)}</span></div>
+        ${ownLine}
+        <div class="pline total"><span class="k">Você recebe (gerente)</span><span class="v num">${brl(gTotal)}</span></div>
+      </div>
+      ${nv>0 ? `<div style="margin-top:18px;padding-top:16px;border-top:0.5px solid var(--line);font-size:13.5px;color:var(--muted);">
+        Cada um dos seus ${nv} ${nv===1?'assessor leva':'assessores leva'} <strong style="color:var(--ink)">${brl(aTotal)}</strong> fazendo ${mat} ${mat===1?'matrícula':'matrículas'}.
+      </div>` : `<div style="margin-top:18px;padding-top:16px;border-top:0.5px solid var(--line);font-size:13.5px;color:var(--muted);">
+        Sem assessores na equipe, seu ganho vem só das matrículas que você fechar.
+      </div>`}`;
+  } else {
+    const recTotal = recEq + gOwn;             // receita inclui matrículas próprias do gerente
+    const pagoTotal = aTotal*nv + gTotal;      // custo total inclui override + repasse próprio
+    const margin = recTotal>0 ? Math.round(saldoEq/recTotal*100) : 0;
+    badge.className = 'badge ' + (saldoEq>=0 ? 'b-meta':'b-loss');
+    badge.textContent = saldoEq>=0 ? 'Saldo positivo' : 'Saldo negativo';
+    document.getElementById('res-tag').textContent = 'Resultado da escola';
+    const ownRev = gm>0
+      ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Receita das suas matrículas (gerente)</span><span class="v num">${brl(gOwn)}</span></div>`
+      : '';
+    document.getElementById('res-body').innerHTML = `
+      <div class="big-label">Saldo da escola no mês · ${nv} ${nv===1?'assessor':'assessores'}${gm>0?' + gerente':''}</div>
+      <div class="big-num ${saldoEq>=0?'pos':'neg'} num">${brlSigned(saldoEq)}</div>
+      <div class="big-sub">${saldoEq>=0?'margem de '+margin+'% sobre a receita líquida':'mês abaixo do ponto de equilíbrio'}</div>
+      <div class="lines">
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Receita líquida (assessores)</span><span class="v num">${brl(recEq)}</span></div>
+        ${ownRev}
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Assessores (${nv}× ${brl(aTotal)})</span><span class="v num">− ${brl(aTotal*nv)}</span></div>
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--loss)"></span>Gerente${gm>0?' (equipe + próprias)':''}</span><span class="v num">− ${brl(gTotal)}</span></div>
+        <div class="pline total"><span class="k">Saldo operacional</span><span class="v num">${brlSigned(saldoEq)}</span></div>
+      </div>`;
+  }
+
+  // table
+  const tbody = document.getElementById('tbody');
+  let rows = '';
+  for(let m=0;m<=30;m++){
+    const at = ASSESSOR[m];
+    const gt = gerenteTotal(m, nv);
+    const r = m*LIQ*nv;
+    const pago = at*nv + gt;
+    const sal = r - pago;
+    const cls = (m===mat?'active ':'') + (m>=10&&m<=14?'meta-row':'');
+    rows += `<tr class="${cls.trim()}">
+      <td>${m}</td>
+      <td class="num">${brl(r)}</td>
+      <td class="num">${brl(at)}</td>
+      <td class="num">${brl(gt)}</td>
+      <td class="num">${brl(pago)}</td>
+      <td class="num ${sal>=0?'saldo-pos':'saldo-neg'}">${brlSigned(sal)}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = rows;
+
+  document.getElementById('table-note').innerHTML =
+    `Receita líquida = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>${nv} ${nv===1?'assessor':'assessores'}</strong>.`;
+
+  updateChart(mat);
+}
+
+function chartSeries(nv){
+  const labels = Array.from({length:31}, (_,m)=>m);
+  return {
+    labels,
+    assessor: labels.map(m=>ASSESSOR[m]*nv),
+    gerente: labels.map(m=>gerenteTotal(m,nv)),
+    saldo: labels.map(m=> m*LIQ*nv - ASSESSOR[m]*nv - gerenteTotal(m,nv))
+  };
+}
+
+function buildChart(){
+  const ctx = document.getElementById('chart').getContext('2d');
+  const s = chartSeries(+document.getElementById('nv').value);
+  chart = new Chart(ctx,{
+    type:'line',
+    data:{labels:s.labels,datasets:[
+      {label:'Assessores',data:s.assessor,borderColor:'#0E5A47',backgroundColor:'#0E5A47',borderWidth:2.5,tension:.3,pointRadius:0,pointHoverRadius:5},
+      {label:'Gerente',data:s.gerente,borderColor:'#B67E22',backgroundColor:'#B67E22',borderWidth:2.5,tension:.3,pointRadius:0,pointHoverRadius:5},
+      {label:'Saldo escola',data:s.saldo,borderColor:'#A23A24',backgroundColor:'#A23A24',borderWidth:2,borderDash:[5,4],tension:.3,pointRadius:0,pointHoverRadius:5}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor:'#15241E',padding:12,cornerRadius:10,titleFont:{family:'Inter',size:13},bodyFont:{family:'Inter',size:13},
+        callbacks:{title:i=>i[0].label+' matrículas por assessor',label:c=>c.dataset.label+': '+brl(c.raw)}
+      }},
+      scales:{
+        x:{title:{display:true,text:'Matrículas no mês (por assessor)',font:{family:'Inter',size:12},color:'#8A968F'},
+           grid:{display:false},ticks:{font:{family:'Inter',size:11},color:'#8A968F',maxRotation:0,callback:(v,i)=>i%5===0?i:''}},
+        y:{grid:{color:'rgba(21,36,30,0.07)'},ticks:{font:{family:'Inter',size:11},color:'#8A968F',callback:v=>'R$ '+(v/1000)+'k'}}
+      }
+    }
+  });
+}
+
+function updateChart(mat){
+  if(!chart) return;
+  const s = chartSeries(+document.getElementById('nv').value);
+  chart.data.datasets[0].data = s.assessor;
+  chart.data.datasets[1].data = s.gerente;
+  chart.data.datasets[2].data = s.saldo;
+  chart.data.datasets.forEach(ds=>{
+    ds.pointRadius = chart.data.labels.map(m=>m===mat?5:0);
+    ds.pointBackgroundColor = ds.borderColor;
+    ds.pointBorderColor = '#fff';
+    ds.pointBorderWidth = 2;
+  });
+  chart.update('none');
+}
+
+// view toggle
+const tA = document.getElementById('tab-assessor');
+const tG = document.getElementById('tab-gerente');
+const tS = document.getElementById('tab-socios');
+const COPY = {
+  assessor:{
+    eyebrow:'Remuneração por desempenho',
+    title:'Quanto você leva <em>pra casa</em> no fim do mês.',
+    lede:'Sua renda tem uma base garantida e cresce a cada matrícula. Mexa no controle e veja exatamente o resultado.'
+  },
+  gerente:{
+    eyebrow:'Liderança comercial',
+    title:'Quanto você ganha <em>liderando</em> a equipe.',
+    lede:'Você recebe R$ 150 por matrícula de toda a equipe. Ajuste quantas matrículas cada assessor faz e o tamanho do time para ver seu ganho — e quanto cada assessor leva.'
+  },
+  socios:{
+    eyebrow:'Resultado financeiro',
+    title:'O modelo que <em>cresce junto</em> com a escola.',
+    lede:'A matrícula custeia o time comercial; a mensalidade sustenta a operação. Ajuste a equipe e a produção e veja o resultado da escola em cada cenário.'
+  }
+};
+function setView(v){
+  view = v;
+  tA.classList.toggle('on',v==='assessor'); tA.setAttribute('aria-selected',v==='assessor');
+  tG.classList.toggle('on',v==='gerente');  tG.setAttribute('aria-selected',v==='gerente');
+  tS.classList.toggle('on',v==='socios');   tS.setAttribute('aria-selected',v==='socios');
+  // assessor: só as próprias matrículas · gerente/sócios: equipe + matrículas próprias do gerente
+  document.getElementById('nv-field').style.display = v==='assessor' ? 'none' : 'block';
+  document.getElementById('gm-field').style.display = v==='assessor' ? 'none' : 'block';
+  document.getElementById('total-mat-box').style.display = v==='assessor' ? 'none' : 'flex';
+  document.getElementById('mat-label').textContent = v==='assessor' ? 'Suas matrículas no mês' : 'Matrículas por assessor';
+  document.getElementById('hero-eyebrow').textContent = COPY[v].eyebrow;
+  document.getElementById('hero-title').innerHTML = COPY[v].title;
+  document.getElementById('hero-lede').textContent = COPY[v].lede;
+  render();
+}
+tA.addEventListener('click',()=>setView('assessor'));
+tG.addEventListener('click',()=>setView('gerente'));
+tS.addEventListener('click',()=>setView('socios'));
+
+document.getElementById('mat').addEventListener('input',render);
+document.getElementById('nv').addEventListener('input',render);
+document.getElementById('gm').addEventListener('input',render);
+
+buildChart();
+document.getElementById('nv-field').style.display='none';
+document.getElementById('gm-field').style.display='none';
+document.getElementById('total-mat-box').style.display='none';
+render();
+</script>
+</body>
+</html>
