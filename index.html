@@ -274,20 +274,20 @@
   <section class="block">
     <div class="sec-eyebrow">As regras</div>
     <h2>Como cada real é calculado</h2>
-    <p class="sec-lede">Duas funções, dois jeitos de ganhar. O assessor escala a própria renda com base fixa mais bônus por volume; o gerente recebe um valor único por matrícula de toda a equipe — simples e previsível.</p>
+    <p class="sec-lede">Duas funções, dois jeitos de ganhar. O assessor escala a própria renda com base fixa mais comissão por matrícula; o gerente recebe um valor único por matrícula de toda a equipe — simples e previsível.</p>
 
     <div class="rules">
       <div class="rule-card">
         <div class="role">
           <span class="ic a">A</span>
-          <div><h3>Assessor</h3><p>Base fixa garantida + bônus por volume</p></div>
+          <div><h3>Assessor</h3><p>Base fixa garantida + comissão por matrícula</p></div>
         </div>
         <div class="tiers">
           <div class="tier"><div class="range">0 a 5 matrículas<span>só a base garantida</span></div><div class="pay num">R$ 1.500<span>fixo</span></div></div>
-          <div class="tier"><div class="range">6 a 9 matrículas<span>bônus começa a contar</span></div><div class="pay num">até R$ 2.400</div></div>
-          <div class="tier"><div class="range">10 a 14 matrículas<span>faixa da meta</span></div><div class="pay num">até R$ 3.600</div></div>
-          <div class="tier"><div class="range">15 a 19 matrículas<span>alta performance</span></div><div class="pay num">até R$ 4.920</div></div>
-          <div class="tier"><div class="range">20 a 30 matrículas<span>teto do plano</span></div><div class="pay num">até R$ 6.900</div></div>
+          <div class="tier"><div class="range">6 a 9 matrículas<span>fixo + comissão de R$ 100/matr. (17,5%)</span></div><div class="pay num">até R$ 2.400</div></div>
+          <div class="tier"><div class="range">10 a 14 matrículas<span>comissão sobe para R$ 150/matr.</span></div><div class="pay num">até R$ 3.600</div></div>
+          <div class="tier"><div class="range">15 a 19 matrículas<span>comissão sobe para R$ 180/matr.</span></div><div class="pay num">até R$ 4.920</div></div>
+          <div class="tier"><div class="range">20 a 30 matrículas<span>comissão sobe para R$ 200/matr.</span></div><div class="pay num">até R$ 7.500</div></div>
         </div>
       </div>
 
@@ -377,7 +377,7 @@ const ASSESSOR = [
   2100,2200,2300,2400,
   3000,3150,3300,3450,3600,
   4200,4380,4560,4740,4920,
-  5100,5280,5460,5640,5820,6000,6180,6360,6540,6720,6900
+  5500,5700,5900,6100,6300,6500,6700,6900,7100,7300,7500
 ];
 const A_FIX = 1500;
 
@@ -389,7 +389,7 @@ function brlSigned(v){ const s = v<0?'− ':'+ '; return s + 'R$ ' + Math.abs(Ma
 
 function faixa(m){
   if(m<=5) return {txt:'Base garantida', cls:'b-base'};
-  if(m<=9) return {txt:'Bônus parcial', cls:'b-mid'};
+  if(m<=9) return {txt:'Comissão parcial', cls:'b-mid'};
   if(m<=14) return {txt:'Meta atingida', cls:'b-meta'};
   if(m<=19) return {txt:'Alta performance', cls:'b-top'};
   return {txt:'Teto do plano', cls:'b-top'};
@@ -431,7 +431,7 @@ function render(){
       <div class="big-sub">com ${mat} ${mat===1?'matrícula':'matrículas'} no mês</div>
       <div class="lines">
         <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(A_FIX)}</span></div>
-        <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Bônus por matrículas</span><span class="v num">${brl(aBonus)}</span></div>
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Comissão por matrículas</span><span class="v num">${brl(aBonus)}</span></div>
         <div class="pline total"><span class="k">Total a receber</span><span class="v num">${brl(aTotal)}</span></div>
       </div>`;
   } else if(view === 'gerente'){
