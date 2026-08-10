@@ -272,10 +272,10 @@
         <div class="field" id="pv-realizadas-field" style="display:none;">
           <div class="field-top">
             <span class="field-label">Reuniões realizadas</span>
-            <span class="field-val num" id="pv-realizadas-out">40</span>
+            <span class="field-val num" id="pv-realizadas-out">60</span>
           </div>
-          <input type="range" id="pv-realizadas" min="0" max="60" value="40" step="1" aria-label="Reuniões realizadas no mês">
-          <div class="scale"><span>0</span><span class="meta-tick">piso · 28</span><span class="meta-tick">meta · 40</span><span>60</span></div>
+          <input type="range" id="pv-realizadas" min="0" max="90" value="60" step="1" aria-label="Reuniões realizadas no mês">
+          <div class="scale"><span>0</span><span class="meta-tick">piso · 42</span><span class="meta-tick">meta · 60</span><span>90</span></div>
         </div>
         <div class="field" id="pv-matriculas-field" style="display:none;">
           <div class="field-top">
@@ -330,16 +330,16 @@
         </div>
         <div class="tiers">
           <div class="tier-group">Remoto · sem fixo</div>
-          <div class="tier"><div class="range">Reunião realizada<span>só paga a partir de 28/mês (70% da meta de 40)</span></div><div class="pay num">R$ 20<span>por reunião</span></div></div>
+          <div class="tier"><div class="range">Reunião realizada<span>só paga a partir de 42/mês (70% da meta de 60)</span></div><div class="pay num">R$ 20<span>por reunião</span></div></div>
           <div class="tier"><div class="range">Matrícula, até a 6ª<span>abaixo do acelerador</span></div><div class="pay num">R$ 100<span>por matrícula</span></div></div>
           <div class="tier"><div class="range">Matrícula, da 7ª em diante<span>retroativo — todas passam a valer mais</span></div><div class="pay num">R$ 150<span>por matrícula</span></div></div>
           <div class="tier-group">Presencial · com fixo</div>
           <div class="tier"><div class="range">Base fixa<span>garantida, todo mês</span></div><div class="pay num">R$ 1.500<span>fixo</span></div></div>
-          <div class="tier"><div class="range">Reunião realizada<span>mesmo piso: 28/mês</span></div><div class="pay num">R$ 15<span>por reunião</span></div></div>
+          <div class="tier"><div class="range">Reunião realizada<span>mesmo piso: 42/mês</span></div><div class="pay num">R$ 15<span>por reunião</span></div></div>
           <div class="tier"><div class="range">Cada matrícula<span>taxa única, sem acelerador</span></div><div class="pay num">R$ 70<span>por matrícula</span></div></div>
         </div>
         <p style="margin-top:18px;font-size:13.5px;color:var(--muted);line-height:1.55;border-top:0.5px solid var(--line);padding-top:16px;">
-          Abaixo de 28 reuniões realizadas no mês, a comissão de reunião zera inteira — não é proporcional. A comissão por matrícula é sempre paga, independente do piso de reunião.
+          Abaixo de 42 reuniões realizadas no mês, a comissão de reunião zera inteira — não é proporcional. A comissão por matrícula é sempre paga, independente do piso de reunião.
         </p>
       </div>
 
@@ -452,7 +452,7 @@ const A_FIX = 1500;
 // não sobra caixa dela; mensalidade demora 11 meses pra realizar. Por isso o
 // saldo do pré-vendedor usa só a margem de material, mais conservador.
 const MAT_MARGIN = 450;
-const PV_PISO = 28;
+const PV_PISO = 42;
 const PV_ACELERA_MAT = 7;
 let pvModelo = 'remoto';
 
@@ -529,13 +529,17 @@ function render(){
 
   const pvMatTotalEsc = pvMatG + pvMatA;
   const pvEsc = computePV(pvRealizadas, pvMatTotalEsc, pvModelo);
+  // O fixo do pré-vendedor sai da escola (margem de material/mensalidade), não da
+  // comissão de matrícula — por isso só o variável (reunião + matrícula) entra no
+  // saldo abaixo, que mede especificamente se a matrícula autofinancia a estrutura.
+  const pvVariavelEsc = pvEsc.reuniaoComm + pvEsc.matComm;
   const gOwnEsc = (gm - pvMatG)*LIQ + pvMatG*(LIQ - GM_DESCONTO_PV);
   const gTotalEsc = gOverride + gOwnEsc;
   const recTotalEsc = mat*LIQ*nv + gm*LIQ;
-  const pagoTotalEsc = aTotal*nv + gTotalEsc + pvEsc.total;
+  const pagoTotalEsc = aTotal*nv + gTotalEsc + pvVariavelEsc;
   const saldoEsc = recTotalEsc - pagoTotalEsc;
   const marginEsc = recTotalEsc>0 ? Math.round(saldoEsc/recTotalEsc*100) : 0;
-  escState = {nv, gm, gOwnEsc, pvTotal: pvEsc.total};
+  escState = {nv, gm, gOwnEsc, pvTotal: pvVariavelEsc};
 
   const badge = document.getElementById('res-badge');
 
@@ -597,14 +601,17 @@ function render(){
     const ownRev = gm>0
       ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Receita das suas matrículas (gerente)</span><span class="v num">${brl(gm*LIQ)}</span></div>`
       : '';
-    const pvLine = pvEsc.total>0
-      ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--slate)"></span>Pré-vendedor (${pvMatTotalEsc} ${pvMatTotalEsc===1?'matrícula originada':'matrículas originadas'})</span><span class="v num">− ${brl(pvEsc.total)}</span></div>`
+    const pvLine = pvVariavelEsc>0
+      ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--slate)"></span>Pré-vendedor, variável (${pvMatTotalEsc} ${pvMatTotalEsc===1?'matrícula originada':'matrículas originadas'})</span><span class="v num">− ${brl(pvVariavelEsc)}</span></div>`
       : '';
     const descontoNote = pvMatG>0
       ? `<div style="margin-top:16px;padding-top:14px;border-top:0.5px solid var(--line);font-size:13px;color:var(--faint);">${pvMatG} ${pvMatG===1?'matrícula própria do gerente veio':'matrículas próprias do gerente vieram'} de entrevista agendada pelo pré-vendedor — comissão dessas reduzida em R$ ${GM_DESCONTO_PV}: R$ ${LIQ-GM_DESCONTO_PV} em vez de R$ ${LIQ}.</div>`
       : '';
+    const pvFixoNote = pvEsc.fixo>0
+      ? `<div style="margin-top:${pvMatG>0?'10px':'16px'};${pvMatG>0?'':'padding-top:14px;border-top:0.5px solid var(--line);'}font-size:13px;color:var(--faint);">+ ${brl(pvEsc.fixo)} de base fixa do pré-vendedor presencial — sai da escola (margem de material/mensalidade), não desconta desse saldo porque não é coberto pela comissão de matrícula.</div>`
+      : '';
     document.getElementById('res-body').innerHTML = `
-      <div class="big-label">Saldo da escola no mês · ${nv} ${nv===1?'assessor':'assessores'}${gm>0?' + gerente':''}${pvEsc.total>0?' + pré-vendedor':''}</div>
+      <div class="big-label">Saldo da escola no mês · ${nv} ${nv===1?'assessor':'assessores'}${gm>0?' + gerente':''}${pvVariavelEsc>0?' + pré-vendedor':''}</div>
       <div class="big-num ${saldoEsc>=0?'pos':'neg'} num">${brlSigned(saldoEsc)}</div>
       <div class="big-sub">${saldoEsc>=0?'margem de '+marginEsc+'% sobre a receita bruta':'mês abaixo do ponto de equilíbrio'}</div>
       <div class="lines">
@@ -615,7 +622,8 @@ function render(){
         ${pvLine}
         <div class="pline total"><span class="k">Saldo operacional</span><span class="v num">${brlSigned(saldoEsc)}</span></div>
       </div>
-      ${descontoNote}`;
+      ${descontoNote}
+      ${pvFixoNote}`;
   }
 
   const tbody = document.getElementById('tbody');
@@ -639,16 +647,16 @@ function render(){
       </tr>`;
     }
     tbody.innerHTML = rows;
-    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?'piso de 28 atingido':'abaixo do piso de 28 — comissão de reunião zerada'}), modelo <strong>${pvModelo==='presencial'?'presencial':'remoto'}</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
+    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?'piso de 42 atingido':'abaixo do piso de 42 — comissão de reunião zerada'}), modelo <strong>${pvModelo==='presencial'?'presencial':'remoto'}</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
   } else if(view === 'socios'){
-    theadRow.innerHTML = `<th>Matr./assessor</th><th>Receita bruta</th><th>Assessor</th><th>Gerente</th><th>Pré-vendedor</th><th>Total pago</th><th>Saldo escola</th>`;
+    theadRow.innerHTML = `<th>Matr./assessor</th><th>Receita bruta</th><th>Assessor</th><th>Gerente</th><th>Pré-vendedor (variável)</th><th>Total pago</th><th>Saldo escola</th>`;
     let rows = '';
     for(let m=0;m<=30;m++){
       const at = ASSESSOR[m];
       const gtOverride = gerenteTotal(m, nv);
       const gtTotal = gtOverride + gOwnEsc;         // parte própria do gerente é fixa (não escala com m)
       const r = m*LIQ*nv + gm*LIQ;
-      const pago = at*nv + gtTotal + pvEsc.total;   // pré-vendedor também fixo (input independente de m)
+      const pago = at*nv + gtTotal + pvVariavelEsc; // fixo do pré-vendedor não entra aqui — sai da escola, não da matrícula
       const sal = r - pago;
       const cls = (m===mat?'active ':'') + (m>=10&&m<=14?'meta-row':'');
       rows += `<tr class="${cls.trim()}">
@@ -656,13 +664,13 @@ function render(){
         <td class="num">${brl(r)}</td>
         <td class="num">${brl(at)}</td>
         <td class="num">${brl(gtTotal)}</td>
-        <td class="num">${brl(pvEsc.total)}</td>
+        <td class="num">${brl(pvVariavelEsc)}</td>
         <td class="num">${brl(pago)}</td>
         <td class="num ${sal>=0?'saldo-pos':'saldo-neg'}">${brlSigned(sal)}</td>
       </tr>`;
     }
     tbody.innerHTML = rows;
-    document.getElementById('table-note').innerHTML = `Receita bruta = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>${nv} ${nv===1?'assessor':'assessores'}</strong>, <strong>${gm} ${gm===1?'matrícula própria':'matrículas próprias'} do gerente</strong> (${pvMatG} ${pvMatG===1?'delas vinda':'delas vindas'} do pré-vendedor, a R$ ${LIQ-GM_DESCONTO_PV}) e <strong>${pvMatTotalEsc} ${pvMatTotalEsc===1?'matrícula originada':'matrículas originadas'}</strong> pelo pré-vendedor no total, fixos ao longo da tabela.`;
+    document.getElementById('table-note').innerHTML = `Receita bruta = R$ 456 por matrícula (80% de R$ 570, já descontados 20% de royalties). Colunas consideram <strong>${nv} ${nv===1?'assessor':'assessores'}</strong>, <strong>${gm} ${gm===1?'matrícula própria':'matrículas próprias'} do gerente</strong> (${pvMatG} ${pvMatG===1?'delas vinda':'delas vindas'} do pré-vendedor, a R$ ${LIQ-GM_DESCONTO_PV}) e <strong>${pvMatTotalEsc} ${pvMatTotalEsc===1?'matrícula originada':'matrículas originadas'}</strong> pelo pré-vendedor no total, fixos ao longo da tabela. A coluna Pré-vendedor mostra só o variável${pvEsc.fixo>0?` — o fixo de ${brl(pvEsc.fixo)} sai da escola separadamente, não da matrícula`:''}.`;
   } else {
     // assessor view uses nv=1 (individual); gerente usa a equipe
     const tNv = view==='assessor' ? 1 : nv;
