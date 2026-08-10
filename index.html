@@ -262,13 +262,6 @@
           <input type="range" id="gm" min="0" max="30" value="0" step="1" aria-label="Matrículas individuais do gerente">
           <div class="scale"><span>0</span><span>R$ 456 cada</span><span>30</span></div>
         </div>
-        <div class="field" id="pv-modelo-field" style="display:none;">
-          <div class="field-top"><span class="field-label">Formato do pré-vendedor</span></div>
-          <div class="seg" style="width:100%;box-shadow:none;border-color:var(--line-2);">
-            <button id="pv-remoto" class="on" type="button" style="flex:1;">Remoto · sem fixo</button>
-            <button id="pv-presencial" type="button" style="flex:1;">Presencial · com fixo</button>
-          </div>
-        </div>
         <div class="field" id="pv-realizadas-field" style="display:none;">
           <div class="field-top">
             <span class="field-label">Reuniões realizadas</span>
@@ -283,7 +276,7 @@
             <span class="field-val num" id="pv-matriculas-out">10</span>
           </div>
           <input type="range" id="pv-matriculas" min="0" max="15" value="10" step="1" aria-label="Matrículas originadas no mês">
-          <div class="scale"><span>0</span><span class="meta-tick">acelera · 7</span><span>15</span></div>
+          <div class="scale"><span>0</span><span>15</span></div>
         </div>
         <div class="field" id="esc-pv-matg-field" style="display:none;">
           <div class="field-top">
@@ -326,16 +319,11 @@
       <div class="rule-card">
         <div class="role">
           <span class="ic p">P</span>
-          <div><h3>Pré-Vendedor</h3><p>Prospecção, qualificação e agendamento</p></div>
+          <div><h3>Pré-Vendedor</h3><p>PJ presencial, prospecção, qualificação e agendamento</p></div>
         </div>
         <div class="tiers">
-          <div class="tier-group">Remoto · sem fixo</div>
-          <div class="tier"><div class="range">Reunião realizada<span>só paga a partir de 42/mês (70% da meta de 60)</span></div><div class="pay num">R$ 20<span>por reunião</span></div></div>
-          <div class="tier"><div class="range">Matrícula, até a 6ª<span>abaixo do acelerador</span></div><div class="pay num">R$ 100<span>por matrícula</span></div></div>
-          <div class="tier"><div class="range">Matrícula, da 7ª em diante<span>retroativo — todas passam a valer mais</span></div><div class="pay num">R$ 150<span>por matrícula</span></div></div>
-          <div class="tier-group">Presencial · com fixo</div>
           <div class="tier"><div class="range">Base fixa<span>garantida, todo mês</span></div><div class="pay num">R$ 1.500<span>fixo</span></div></div>
-          <div class="tier"><div class="range">Reunião realizada<span>mesmo piso: 42/mês</span></div><div class="pay num">R$ 15<span>por reunião</span></div></div>
+          <div class="tier"><div class="range">Reunião realizada<span>só paga a partir de 42/mês (70% da meta de 60)</span></div><div class="pay num">R$ 15<span>por reunião</span></div></div>
           <div class="tier"><div class="range">Cada matrícula<span>taxa única, sem acelerador</span></div><div class="pay num">R$ 70<span>por matrícula</span></div></div>
         </div>
         <p style="margin-top:18px;font-size:13.5px;color:var(--muted);line-height:1.55;border-top:0.5px solid var(--line);padding-top:16px;">
@@ -453,18 +441,15 @@ const A_FIX = 1500;
 // saldo do pré-vendedor usa só a margem de material, mais conservador.
 const MAT_MARGIN = 450;
 const PV_PISO = 42;
-const PV_ACELERA_MAT = 7;
-let pvModelo = 'remoto';
 
-function computePV(realizadas, matriculas, modelo){
-  const isPresencial = modelo === 'presencial';
-  const fixo = isPresencial ? 1500 : 0;
-  const taxaReuniao = isPresencial ? 15 : 20;
+// Pré-vendedor: só o modelo presencial PJ (fixo garantido) — o remoto sem fixo
+// foi descartado, a segurança de renda importa mais pra reter a contratação.
+function computePV(realizadas, matriculas){
+  const fixo = 1500;
+  const taxaReuniao = 15;
   const pisoOk = realizadas >= PV_PISO;
   const reuniaoComm = pisoOk ? realizadas * taxaReuniao : 0;
-  const matComm = isPresencial
-    ? matriculas * 70
-    : (matriculas >= PV_ACELERA_MAT ? matriculas * 150 : matriculas * 100);
+  const matComm = matriculas * 70;
   const total = fixo + reuniaoComm + matComm;
   return {fixo, reuniaoComm, matComm, total, pisoOk};
 }
@@ -511,7 +496,7 @@ function render(){
   const pagoEq = aTotal*nv + gOverride;          // saldo da escola não inclui o repasse das matrículas próprias (pass-through)
   const saldoEq = recEq - pagoEq;
   const f = faixa(mat);
-  const pv = computePV(pvRealizadas, pvMatriculas, pvModelo);
+  const pv = computePV(pvRealizadas, pvMatriculas);
   const pvSaldo = pvMatriculas*MAT_MARGIN - pv.total;
 
   // Escola: atribuição de matrículas ao pré-vendedor (gerente e equipe de assessores)
@@ -528,7 +513,7 @@ function render(){
   document.getElementById('esc-pv-mata-out').textContent = pvMatA;
 
   const pvMatTotalEsc = pvMatG + pvMatA;
-  const pvEsc = computePV(pvRealizadas, pvMatTotalEsc, pvModelo);
+  const pvEsc = computePV(pvRealizadas, pvMatTotalEsc);
   // O fixo do pré-vendedor sai da escola (margem de material/mensalidade), não da
   // comissão de matrícula — por isso só o variável (reunião + matrícula) entra no
   // saldo abaixo, que mede especificamente se a matrícula autofinancia a estrutura.
@@ -582,11 +567,11 @@ function render(){
     badge.textContent = pv.pisoOk ? 'Piso de reunião atingido' : 'Abaixo do piso — sem comissão de reunião';
     document.getElementById('res-tag').textContent = 'Holerite do pré-vendedor';
     document.getElementById('res-body').innerHTML = `
-      <div class="big-label">Seu ganho no mês${pvModelo==='presencial'?' (presencial, com fixo)':' (remoto, sem fixo)'}</div>
+      <div class="big-label">Seu ganho no mês (presencial, com fixo)</div>
       <div class="big-num pos num">${brl(pv.total)}</div>
       <div class="big-sub">${pvRealizadas} reuniões realizadas · ${pvMatriculas} ${pvMatriculas===1?'matrícula originada':'matrículas originadas'}</div>
       <div class="lines">
-        ${pvModelo==='presencial' ? `<div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base fixa</span><span class="v num">${brl(pv.fixo)}</span></div>` : ''}
+        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base fixa</span><span class="v num">${brl(pv.fixo)}</span></div>
         <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Comissão por reunião${pv.pisoOk?'':' (zerada — abaixo do piso)'}</span><span class="v num">${brl(pv.reuniaoComm)}</span></div>
         <div class="pline"><span class="k"><span class="dot" style="background:var(--slate)"></span>Comissão por matrícula</span><span class="v num">${brl(pv.matComm)}</span></div>
         <div class="pline total"><span class="k">Total a receber</span><span class="v num">${brl(pv.total)}</span></div>
@@ -633,9 +618,9 @@ function render(){
     theadRow.innerHTML = `<th>Matr.</th><th>Realizadas</th><th>Comissão reunião</th><th>Comissão matrícula</th><th>Fixo</th><th>Total pago</th><th>Saldo (material)</th>`;
     let rows = '';
     for(let m=0;m<=15;m++){
-      const p = computePV(pvRealizadas, m, pvModelo);
+      const p = computePV(pvRealizadas, m);
       const sal = m*MAT_MARGIN - p.total;
-      const cls = (m===pvMatriculas?'active ':'') + (m===PV_ACELERA_MAT?'meta-row':'');
+      const cls = m===pvMatriculas?'active':'';
       rows += `<tr class="${cls.trim()}">
         <td>${m}</td>
         <td class="num">${pvRealizadas}</td>
@@ -647,7 +632,7 @@ function render(){
       </tr>`;
     }
     tbody.innerHTML = rows;
-    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?'piso de 42 atingido':'abaixo do piso de 42 — comissão de reunião zerada'}), modelo <strong>${pvModelo==='presencial'?'presencial':'remoto'}</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
+    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?'piso de 42 atingido':'abaixo do piso de 42 — comissão de reunião zerada'}), modelo <strong>presencial</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
   } else if(view === 'socios'){
     theadRow.innerHTML = `<th>Matr./assessor</th><th>Receita bruta</th><th>Assessor</th><th>Gerente</th><th>Pré-vendedor (variável)</th><th>Total pago</th><th>Saldo escola</th>`;
     let rows = '';
@@ -723,12 +708,12 @@ function chartSeriesEsc(){
   };
 }
 
-function pvChartSeries(realizadas, modelo){
+function pvChartSeries(realizadas){
   const labels = Array.from({length:16}, (_,m)=>m);
   return {
     labels,
-    total: labels.map(m=>computePV(realizadas,m,modelo).total),
-    saldo: labels.map(m=> m*MAT_MARGIN - computePV(realizadas,m,modelo).total)
+    total: labels.map(m=>computePV(realizadas,m).total),
+    saldo: labels.map(m=> m*MAT_MARGIN - computePV(realizadas,m).total)
   };
 }
 
@@ -737,7 +722,7 @@ function buildChart(){
 
   if(view === 'prevendedor'){
     const pvRealizadas = +document.getElementById('pv-realizadas').value;
-    const s = pvChartSeries(pvRealizadas, pvModelo);
+    const s = pvChartSeries(pvRealizadas);
     chart = new Chart(ctx,{
       type:'line',
       data:{labels:s.labels,datasets:[
@@ -792,7 +777,7 @@ function updateChart(){
   if(view === 'prevendedor'){
     const pvRealizadas = +document.getElementById('pv-realizadas').value;
     const pvMatriculas = +document.getElementById('pv-matriculas').value;
-    const s = pvChartSeries(pvRealizadas, pvModelo);
+    const s = pvChartSeries(pvRealizadas);
     chart.data.datasets[0].data = s.total;
     chart.data.datasets[1].data = s.saldo;
     chart.data.datasets.forEach(ds=>{
@@ -839,7 +824,7 @@ const COPY = {
   prevendedor:{
     eyebrow:'Pré-vendas',
     title:'Quanto rende <em>prospectar e agendar</em> bem.',
-    lede:'Remoto sem fixo (comissão mais alta, mais risco) ou presencial com fixo (comissão menor, mais segurança). Ajuste reuniões realizadas e matrículas originadas pra ver o ganho e o piso de qualidade.'
+    lede:'PJ presencial, com base fixa garantida. Ajuste reuniões realizadas e matrículas originadas pra ver o ganho e o piso de qualidade que libera a comissão de reunião.'
   },
   socios:{
     eyebrow:'Resultado financeiro',
@@ -859,7 +844,6 @@ function setView(v){
   document.getElementById('gm-field').style.display = (v==='gerente'||v==='socios') ? 'block' : 'none';
   document.getElementById('total-mat-box').style.display = (v==='gerente'||v==='socios') ? 'flex' : 'none';
   document.getElementById('mat-field').style.display = v==='prevendedor' ? 'none' : 'block';
-  document.getElementById('pv-modelo-field').style.display = (v==='prevendedor'||v==='socios') ? 'block' : 'none';
   document.getElementById('pv-realizadas-field').style.display = (v==='prevendedor'||v==='socios') ? 'block' : 'none';
   document.getElementById('pv-matriculas-field').style.display = v==='prevendedor' ? 'block' : 'none';
   document.getElementById('esc-pv-matg-field').style.display = v==='socios' ? 'block' : 'none';
@@ -897,18 +881,6 @@ document.getElementById('pv-realizadas').addEventListener('input',render);
 document.getElementById('pv-matriculas').addEventListener('input',render);
 document.getElementById('esc-pv-matg').addEventListener('input',render);
 document.getElementById('esc-pv-mata').addEventListener('input',render);
-document.getElementById('pv-remoto').addEventListener('click',()=>{
-  pvModelo = 'remoto';
-  document.getElementById('pv-remoto').classList.add('on');
-  document.getElementById('pv-presencial').classList.remove('on');
-  render();
-});
-document.getElementById('pv-presencial').addEventListener('click',()=>{
-  pvModelo = 'presencial';
-  document.getElementById('pv-presencial').classList.add('on');
-  document.getElementById('pv-remoto').classList.remove('on');
-  render();
-});
 
 buildChart();
 document.getElementById('nv-field').style.display='none';
