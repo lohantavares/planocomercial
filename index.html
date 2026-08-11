@@ -324,7 +324,7 @@
         <div class="tiers">
           <div class="tier"><div class="range">Base fixa<span>garantida, todo mês</span></div><div class="pay num">R$ 1.500<span>fixo</span></div></div>
           <div class="tier"><div class="range">Reunião realizada<span>só paga a partir de 42/mês (70% da meta de 60)</span></div><div class="pay num">R$ 15<span>por reunião</span></div></div>
-          <div class="tier"><div class="range">Cada matrícula<span>taxa única, sem acelerador</span></div><div class="pay num">R$ 70<span>por matrícula</span></div></div>
+          <div class="tier"><div class="range">Cada matrícula<span>taxa única, sem acelerador</span></div><div class="pay num">R$ 100<span>por matrícula</span></div></div>
         </div>
         <p style="margin-top:18px;font-size:13.5px;color:var(--muted);line-height:1.55;border-top:0.5px solid var(--line);padding-top:16px;">
           Abaixo de 42 reuniões realizadas no mês, a comissão de reunião zera inteira — não é proporcional. A comissão por matrícula é sempre paga, independente do piso de reunião.
@@ -449,7 +449,7 @@ function computePV(realizadas, matriculas){
   const taxaReuniao = 15;
   const pisoOk = realizadas >= PV_PISO;
   const reuniaoComm = pisoOk ? realizadas * taxaReuniao : 0;
-  const matComm = matriculas * 70;
+  const matComm = matriculas * 100;
   const total = fixo + reuniaoComm + matComm;
   return {fixo, reuniaoComm, matComm, total, pisoOk};
 }
@@ -500,7 +500,7 @@ function render(){
   const pvSaldo = pvMatriculas*MAT_MARGIN - pv.total;
 
   // Escola: atribuição de matrículas ao pré-vendedor (gerente e equipe de assessores)
-  const GM_DESCONTO_PV = 70;
+  const GM_DESCONTO_PV = 100;
   const matgSlider = document.getElementById('esc-pv-matg');
   const mataSlider = document.getElementById('esc-pv-mata');
   matgSlider.max = gm;
@@ -829,7 +829,7 @@ const COPY = {
   socios:{
     eyebrow:'Resultado financeiro',
     title:'O modelo que <em>cresce junto</em> com a escola.',
-    lede:'A matrícula custeia o time comercial; a mensalidade sustenta a operação. Ajuste a equipe, a produção e quantas matrículas vieram do pré-vendedor para ver o resultado completo — incluindo o desconto de R$ 70 na comissão do gerente nas matrículas próprias que ele originou.'
+    lede:'A matrícula custeia o time comercial; a mensalidade sustenta a operação. Ajuste a equipe, a produção e quantas matrículas vieram do pré-vendedor para ver o resultado completo — incluindo o desconto de R$ 100 na comissão do gerente nas matrículas próprias que ele originou.'
   }
 };
 function setView(v){
