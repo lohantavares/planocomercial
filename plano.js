@@ -1,12 +1,14 @@
 const LIQ = 456;
+// Base fixa R$2.100 + comissão por faixa (a parte variável é a mesma de antes;
+// só a base subiu de R$1.500 para R$2.100, então cada total subiu R$600).
 const ASSESSOR = [
-  1500,1500,1500,1500,1500,1500,
-  2100,2200,2300,2400,
-  3000,3150,3300,3450,3600,
-  4200,4380,4560,4740,4920,
-  5500,5700,5900,6100,6300,6500,6700,6900,7100,7300,7500
+  2100,2100,2100,2100,2100,2100,
+  2700,2800,2900,3000,
+  3600,3750,3900,4050,4200,
+  4800,4980,5160,5340,5520,
+  6100,6300,6500,6700,6900,7100,7300,7500,7700,7900,8100
 ];
-const A_FIX = 1500;
+const A_FIX = 2100;
 
 // Margem de material por matrícula — base do saldo do pré-vendedor.
 // A taxa de matrícula (R$456) já é repasse integral pra comissão do assessor,
@@ -18,7 +20,7 @@ const PV_PISO = 42;
 // Pré-vendedor: só o modelo presencial PJ (fixo garantido) — o remoto sem fixo
 // foi descartado, a segurança de renda importa mais pra reter a contratação.
 function computePV(realizadas, matriculas){
-  const fixo = 1500;
+  const fixo = 1800;
   const taxaReuniao = 15;
   const pisoOk = realizadas >= PV_PISO;
   const reuniaoComm = pisoOk ? realizadas * taxaReuniao : 0;
