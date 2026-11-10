@@ -1,40 +1,45 @@
 const LIQ = 456;
-// Base fixa R$2.100 + comissão por faixa (a parte variável é a mesma de antes;
-// só a base subiu de R$1.500 para R$2.100, então cada total subiu R$600).
-const ASSESSOR = [
-  2100,2100,2100,2100,2100,2100,
-  2700,2800,2900,3000,
-  3600,3750,3900,4050,4200,
-  4800,4980,5160,5340,5520,
-  6100,6300,6500,6700,6900,7100,7300,7500,7700,7900,8100
-];
-const A_FIX = 2100;
+const MAT_BRUTA = 570;  // valor cheio da matrícula, base dos percentuais
+
+// Plano vigente. Nas faixas, cada par é [até N matrículas, R$ por matrícula], e o
+// valor é retroativo: ao entrar na faixa, todas as matrículas passam a valer ele.
+const PLANO_ATUAL = {
+  pv:{fixo:1800, reuniao:15, piso:42, matricula:100},
+  a:{fixo:2100, tiers:[[5,0],[9,100],[14,150],[19,180],[30,200]]},
+  g:{fixo:3000, tiers:[[15,0],[30,40],[45,60],[60,80],[Infinity,100]], own:342, desconto:100}
+};
+
+let A_FIX, ASSESSOR, PV_FIXO, PV_REUNIAO, PV_PISO, PV_MAT, G_FIX, G_TIERS, G_OWN, GM_DESCONTO_PV;
+let modoCustom = false;
+function aplicarPlano(p){
+  A_FIX = p.a.fixo;
+  ASSESSOR = Array.from({length:31}, (_,m)=> A_FIX + m * p.a.tiers.find(([lim])=>m<=lim)[1]);
+  PV_FIXO = p.pv.fixo; PV_REUNIAO = p.pv.reuniao; PV_PISO = p.pv.piso; PV_MAT = p.pv.matricula;
+  G_FIX = p.g.fixo; G_TIERS = p.g.tiers; G_OWN = p.g.own;
+  GM_DESCONTO_PV = Math.min(p.g.desconto, p.g.own);  // a comissão própria nunca fica negativa
+}
+aplicarPlano(PLANO_ATUAL);
 
 // Margem de material por matrícula — base do saldo do pré-vendedor.
 // A taxa de matrícula (R$456) já é repasse integral pra comissão do assessor,
 // não sobra caixa dela; mensalidade demora 11 meses pra realizar. Por isso o
 // saldo do pré-vendedor usa só a margem de material, mais conservador.
 const MAT_MARGIN = 450;
-const PV_PISO = 42;
 
 // Pré-vendedor: só o modelo presencial PJ (fixo garantido) — o remoto sem fixo
 // foi descartado, a segurança de renda importa mais pra reter a contratação.
 function computePV(realizadas, matriculas){
-  const fixo = 1800;
-  const taxaReuniao = 15;
+  const fixo = PV_FIXO;
+  const taxaReuniao = PV_REUNIAO;
   const pisoOk = realizadas >= PV_PISO;
   const reuniaoComm = pisoOk ? realizadas * taxaReuniao : 0;
-  const matComm = matriculas * 100;
+  const matComm = matriculas * PV_MAT;
   const total = fixo + reuniaoComm + matComm;
   return {fixo, reuniaoComm, matComm, total, pisoOk};
 }
 
 // Gerente: base fixa + comissão retroativa sobre o total de matrículas da EQUIPE,
 // em faixas (cada faixa paga mais por matrícula), + vendas próprias.
-const G_FIX = 3000;
-const G_TIERS = [[15,0],[30,40],[45,60],[60,80],[Infinity,100]]; // [até T matrículas da equipe, R$ por matrícula]
-const G_OWN = 342;            // 60% de R$570 por matrícula própria
-const GM_DESCONTO_PV = 100;   // desconto na comissão própria quando a matrícula veio do pré-vendedor
 function gerenteComm(T){
   // Retroativo, igual ao assessor: ao entrar na faixa, todas as matrículas da equipe valem o novo valor.
   const [, r] = G_TIERS.find(([lim]) => T <= lim);
@@ -46,7 +51,7 @@ function brl(v){ return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
 function brlSigned(v){ const s = v<0?'− ':'+ '; return s + 'R$ ' + Math.abs(Math.round(v)).toLocaleString('pt-BR'); }
 
 function faixa(m){
-  if(m<=5) return {txt:'Base garantida', cls:'b-base'};
+  if(m<=5) return {txt:A_FIX>0?'Base garantida':'Faixa inicial', cls:'b-base'};
   if(m<=9) return {txt:'Comissão parcial', cls:'b-mid'};
   if(m<=14) return {txt:'Meta atingida', cls:'b-meta'};
   if(m<=19) return {txt:'Alta performance', cls:'b-top'};
@@ -121,7 +126,7 @@ function render(){
       <div class="big-num pos num">${brl(aTotal)}</div>
       <div class="big-sub">com ${mat} ${mat===1?'matrícula':'matrículas'} no mês</div>
       <div class="lines">
-        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(A_FIX)}</span></div>
+        ${A_FIX>0?`<div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(A_FIX)}</span></div>`:''}
         <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Comissão por matrículas</span><span class="v num">${brl(aBonus)}</span></div>
         <div class="pline total"><span class="k">Total a receber</span><span class="v num">${brl(aTotal)}</span></div>
       </div>`;
@@ -140,7 +145,7 @@ function render(){
       <div class="big-num pos num">${brl(gTotal)}</div>
       <div class="big-sub">equipe de ${totalMat} ${totalMat===1?'matrícula':'matrículas'}${gm>0?` + ${gm} ${gm===1?'matrícula própria':'matrículas próprias'}`:''}</div>
       <div class="lines">
-        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(G_FIX)}</span></div>
+        ${G_FIX>0?`<div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base garantida</span><span class="v num">${brl(G_FIX)}</span></div>`:''}
         <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Comissão da equipe (${totalMat} ${totalMat===1?'matrícula':'matrículas'})</span><span class="v num">${brl(gTeam - G_FIX)}</span></div>
         ${ownLine}
         <div class="pline total"><span class="k">Você recebe (gerente)</span><span class="v num">${brl(gTotal)}</span></div>
@@ -156,11 +161,11 @@ function render(){
     badge.textContent = pv.pisoOk ? 'Piso de reunião atingido' : 'Abaixo do piso — sem comissão de reunião';
     document.getElementById('res-tag').textContent = 'Holerite do pré-vendedor';
     document.getElementById('res-body').innerHTML = `
-      <div class="big-label">Seu ganho no mês (presencial, com fixo)</div>
+      <div class="big-label">Seu ganho no mês (${pv.fixo>0?'presencial, com fixo':'100% variável'})</div>
       <div class="big-num pos num">${brl(pv.total)}</div>
       <div class="big-sub">${pvRealizadas} reuniões realizadas · ${pvMatriculas} ${pvMatriculas===1?'matrícula originada':'matrículas originadas'}</div>
       <div class="lines">
-        <div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base fixa</span><span class="v num">${brl(pv.fixo)}</span></div>
+        ${pv.fixo>0?`<div class="pline"><span class="k"><span class="dot" style="background:var(--gold)"></span>Base fixa</span><span class="v num">${brl(pv.fixo)}</span></div>`:''}
         <div class="pline"><span class="k"><span class="dot" style="background:var(--emerald)"></span>Comissão por reunião${pv.pisoOk?'':' (zerada — abaixo do piso)'}</span><span class="v num">${brl(pv.reuniaoComm)}</span></div>
         <div class="pline"><span class="k"><span class="dot" style="background:var(--slate)"></span>Comissão por matrícula</span><span class="v num">${brl(pv.matComm)}</span></div>
         <div class="pline total"><span class="k">Total a receber</span><span class="v num">${brl(pv.total)}</span></div>
@@ -221,7 +226,7 @@ function render(){
       </tr>`;
     }
     tbody.innerHTML = rows;
-    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?'piso de 42 atingido':'abaixo do piso de 42 — comissão de reunião zerada'}), modelo <strong>presencial</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
+    document.getElementById('table-note').innerHTML = `Simulação com <strong>${pvRealizadas} reuniões realizadas</strong> (${pv.pisoOk?`piso de ${PV_PISO} atingido`:`abaixo do piso de ${PV_PISO} — comissão de reunião zerada`}), modelo <strong>${pv.fixo>0?'presencial':'100% variável'}</strong>. Saldo calculado sobre margem de material (R$ 450/matrícula) — base conservadora: não conta mensalidade (realiza em 11 meses) nem a taxa de matrícula (já é repasse integral pra comissão do assessor).`;
   } else if(view === 'socios'){
     theadRow.innerHTML = `<th>Matr./assessor</th><th>Receita bruta</th><th>Assessor</th><th>Gerente</th><th>Pré-vendedor (variável)</th><th>Total pago</th><th>Saldo escola</th>`;
     let rows = '';
@@ -407,7 +412,7 @@ const COPY = {
   socios:{
     eyebrow:'Resultado financeiro',
     title:'O modelo que <em>cresce junto</em> com a escola.',
-    lede:'A matrícula custeia o time comercial; a mensalidade sustenta a operação. Ajuste a equipe, a produção e quantas matrículas vieram do pré-vendedor para ver o resultado completo — incluindo o desconto de R$ 100 na comissão do gerente nas matrículas próprias que vieram do pré-vendedor.'
+    lede:'A matrícula custeia o time comercial; a mensalidade sustenta a operação. Ajuste a equipe, a produção e quantas matrículas vieram do pré-vendedor para ver o resultado completo — incluindo o desconto na comissão do gerente nas matrículas próprias que vieram do pré-vendedor.'
   }
 };
 function setView(v){
@@ -430,7 +435,8 @@ function setView(v){
 
   document.getElementById('hero-eyebrow').textContent = COPY[v].eyebrow;
   document.getElementById('hero-title').innerHTML = COPY[v].title;
-  document.getElementById('hero-lede').textContent = COPY[v].lede;
+  document.getElementById('hero-lede').textContent = modoCustom ? 'Modo personalizado: defina o fixo e as comissões no painel e veja o resultado mudar na hora. Nada aqui altera o plano oficial.' : COPY[v].lede;
+  syncCfgGrupos(v);
 
   document.getElementById('table-lede').textContent = v==='prevendedor'
     ? 'Todos os cenários de 0 a 15 matrículas originadas, com as reuniões realizadas fixas no valor simulado acima. A linha em destaque acompanha o que você simulou.'
@@ -460,3 +466,112 @@ document.getElementById('pv-realizadas').addEventListener('input',render);
 document.getElementById('pv-matriculas').addEventListener('input',render);
 document.getElementById('esc-pv-matg').addEventListener('input',render);
 document.getElementById('esc-pv-mata').addEventListener('input',render);
+
+// Editor do modo personalizado — só a página completa tem esse markup; as páginas
+// enviadas a cada cargo não têm toggle e ficam sempre no plano vigente.
+function syncCfgGrupos(v){
+  document.querySelectorAll('[data-cfg-grupo]').forEach(el=>{
+    el.style.display = (v==='socios' || el.dataset.cfgGrupo===v) ? 'block' : 'none';
+  });
+  const gmScale = document.getElementById('gm-scale');
+  if(gmScale) gmScale.textContent = brl(G_OWN)+' cada';
+  const pisoTick = document.getElementById('pv-piso-tick');
+  if(pisoTick) pisoTick.textContent = 'piso · '+PV_PISO;
+}
+
+(function(){
+  const box = document.getElementById('cfg-box');
+  if(!box) return;
+  let custom = structuredClone(PLANO_ATUAL);
+
+  const FIXO = 'Fixo (ajuda de custo)';
+  const GRUPOS = [
+    {id:'prevendedor', titulo:'Pré-Vendedor', campos:[
+      {t:FIXO, p:['pv','fixo']},
+      {t:'Por reunião realizada', p:['pv','reuniao']},
+      {t:'Piso de reuniões no mês', p:['pv','piso'], qtd:true},
+      {t:'Por matrícula originada', p:['pv','matricula'], pct:true}
+    ]},
+    {id:'assessor', titulo:'Assessor · por matrícula', campos:[
+      {t:FIXO, p:['a','fixo']},
+      ...['0 a 5 matrículas','6 a 9 matrículas','10 a 14 matrículas','15 a 19 matrículas','20 a 30 matrículas']
+        .map((t,i)=>({t, p:['a','tiers',i,1], pct:true}))
+    ]},
+    {id:'gerente', titulo:'Gerente · por matrícula da equipe', campos:[
+      {t:FIXO, p:['g','fixo']},
+      ...['Equipe: até 15','Equipe: 16 a 30','Equipe: 31 a 45','Equipe: 46 a 60','Equipe: 61 ou mais']
+        .map((t,i)=>({t, p:['g','tiers',i,1], pct:true})),
+      {t:'Matrícula própria', p:['g','own'], pct:true},
+      {t:'Desconto se veio do pré-vendedor', p:['g','desconto'], pct:true}
+    ]}
+  ];
+  const ler = p => p.reduce((o,k)=>o[k], custom);
+  const gravar = (p,v) => { p.slice(0,-1).reduce((o,k)=>o[k], custom)[p[p.length-1]] = v; };
+  const num = v => Math.max(0, +v || 0);
+  const pctDe = v => Math.round(v/MAT_BRUTA*1000)/10;
+
+  const campos = GRUPOS.flatMap(g=>g.campos);
+  box.querySelector('#cfg-grupos').innerHTML = GRUPOS.map(g=>`
+    <div data-cfg-grupo="${g.id}">
+      <div class="cfg-titulo">${g.titulo}</div>
+      ${g.campos.map(c=>{
+        const i = campos.indexOf(c);
+        return `<div class="cfg-row">
+          <span class="cfg-label">${c.t}</span>
+          <span class="cfg-in">${c.qtd?'':'<i>R$</i>'}<input type="number" min="0" step="any" inputmode="decimal" data-i="${i}" aria-label="${c.t}"></span>
+          ${c.pct?`<span class="cfg-in cfg-pct"><input type="number" min="0" step="any" inputmode="decimal" data-pct="${i}" aria-label="${c.t}, percentual de R$ ${MAT_BRUTA}"><i>%</i></span>`:'<span class="cfg-pct"></span>'}
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  function preencher(){
+    campos.forEach((c,i)=>{
+      box.querySelector(`[data-i="${i}"]`).value = ler(c.p);
+      const p = box.querySelector(`[data-pct="${i}"]`);
+      if(p) p.value = pctDe(ler(c.p));
+    });
+  }
+  function recalcular(){
+    aplicarPlano(modoCustom ? custom : PLANO_ATUAL);
+    syncCfgGrupos(view);
+    render();
+  }
+
+  box.addEventListener('input', e=>{
+    const el = e.target;
+    if(el.dataset.i !== undefined){
+      const c = campos[+el.dataset.i], v = num(el.value);
+      gravar(c.p, v);
+      const p = box.querySelector(`[data-pct="${el.dataset.i}"]`);
+      if(p) p.value = pctDe(v);
+    } else if(el.dataset.pct !== undefined){
+      const c = campos[+el.dataset.pct], v = Math.round(MAT_BRUTA*num(el.value))/100;
+      gravar(c.p, v);
+      box.querySelector(`[data-i="${el.dataset.pct}"]`).value = v;
+    } else return;
+    recalcular();
+  });
+
+  document.getElementById('cfg-variavel').addEventListener('click',()=>{
+    custom.pv.fixo = custom.a.fixo = custom.g.fixo = 0;
+    preencher(); recalcular();
+  });
+  document.getElementById('cfg-reset').addEventListener('click',()=>{
+    custom = structuredClone(PLANO_ATUAL);
+    preencher(); recalcular();
+  });
+
+  const bAtual = document.getElementById('plan-atual'), bCustom = document.getElementById('plan-custom');
+  function setModo(c){
+    modoCustom = c;
+    bAtual.classList.toggle('on',!c); bCustom.classList.toggle('on',c);
+    bAtual.setAttribute('aria-pressed',!c); bCustom.setAttribute('aria-pressed',c);
+    document.body.classList.toggle('modo-custom',c);
+    box.style.display = c ? 'block' : 'none';
+    aplicarPlano(c ? custom : PLANO_ATUAL);
+    setView(view);
+  }
+  bAtual.addEventListener('click',()=>setModo(false));
+  bCustom.addEventListener('click',()=>setModo(true));
+  preencher();
+})();
