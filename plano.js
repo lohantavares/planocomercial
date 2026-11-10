@@ -29,20 +29,16 @@ function computePV(realizadas, matriculas){
   return {fixo, reuniaoComm, matComm, total, pisoOk};
 }
 
-// Gerente: base fixa + comissão marginal sobre o total de matrículas da EQUIPE,
+// Gerente: base fixa + comissão retroativa sobre o total de matrículas da EQUIPE,
 // em faixas (cada faixa paga mais por matrícula), + vendas próprias.
 const G_FIX = 3000;
 const G_TIERS = [[15,0],[30,40],[45,60],[60,80],[Infinity,100]]; // [até T matrículas da equipe, R$ por matrícula]
 const G_OWN = 342;            // 60% de R$570 por matrícula própria
 const GM_DESCONTO_PV = 100;   // desconto na comissão própria quando a matrícula veio do pré-vendedor
 function gerenteComm(T){
-  let c = 0, prev = 0;
-  for(const [lim, r] of G_TIERS){
-    c += Math.max(0, Math.min(T, lim) - prev) * r;
-    prev = lim;
-    if(T <= lim) break;
-  }
-  return c;
+  // Retroativo, igual ao assessor: ao entrar na faixa, todas as matrículas da equipe valem o novo valor.
+  const [, r] = G_TIERS.find(([lim]) => T <= lim);
+  return T * r;
 }
 function gerenteTotal(matPerAssessor, nv){ return G_FIX + gerenteComm(matPerAssessor*nv); }
 
